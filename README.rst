@@ -20,6 +20,7 @@ Features
 * Optional .less output format.
 * Automatic sprite images post-processing using `OptiPNG <http://optipng.sourceforge.net/>`_.
 * Sprite- and Project-level configuration via static config files.
+* One sprite from multiple subfolders (--recursive).
 * Configurable `cache busting for sprite images <http://glue.readthedocs.org/en/latest/options.html#cachebuster>`_.
 * Customizable `output css templates <http://glue.readthedocs.org/en/latest/options.html#global-template>`_.
 * Customizable `CSS class names <http://glue.readthedocs.org/en/latest/options.html#separator>`_.
