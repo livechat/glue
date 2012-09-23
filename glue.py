@@ -623,7 +623,7 @@ class Sprite(object):
     def _locate_images(self):
         """Return all valid images within a folder.
 
-        All files with a extension not included i
+        All files with an extension not included in
         (png, jpg, jpeg and gif) or beginning with '.' will be ignored.
 
         If the folder doesn't contain any valid image it will raise
