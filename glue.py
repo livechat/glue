@@ -379,7 +379,7 @@ class Image(object):
         :param sprite: :class:`~Sprite` instance for this image."""
         self.x = None
         self.y = None
-        self.name = name.replace('/', '-')
+        self.name = name
         self.sprite = sprite
         self.filename, self.format = name.rsplit('.', 1)
         
@@ -490,7 +490,7 @@ class Image(object):
         option. For a camelCase representation of the CSS class name use
         ``camelcase`` as separator.
         """
-        name = self.filename
+        name = self.filename[:2]+self.filename[2:].replace('/', '-')
 
         # Remove padding information
         if not self.sprite.manager.config.ignore_filename_paddings:
