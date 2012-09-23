@@ -1104,10 +1104,9 @@ class ProjectSpriteManager(BaseManager):
         self.save()
 
 class JoinFoldersSpriteManager(BaseManager):
-    
     def process_sprite(self, path, name):
         self.log("Processing '%s':" % path)
-        sprite = JoinedSprite(name=name, path=path, manager=self)
+        sprite = JoinedSprite(name=os.path.basename(path), path=path, manager=self)
         self.sprites.append(sprite)
 
     def process(self):
