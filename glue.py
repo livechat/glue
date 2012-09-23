@@ -46,6 +46,7 @@ DEFAULT_SETTINGS = {
     'optipngpath': 'optipng',
     'optipng': False,
     'project': False,
+    'join_folders': False,
     'quiet': False,
     'cachebuster': False,
     'cachebuster-filename': False,
@@ -378,10 +379,10 @@ class Image(object):
         :param sprite: :class:`~Sprite` instance for this image."""
         self.x = None
         self.y = None
-        self.name = name
+        self.name = name.replace('/', '-')
         self.sprite = sprite
         self.filename, self.format = name.rsplit('.', 1)
-
+        
         pseudo = set(self.filename.split('_')).intersection(PSEUDO_CLASSES)
         self.pseudo = ':%s' % list(pseudo)[-1] if pseudo else ''
 
@@ -885,6 +886,62 @@ class Sprite(object):
 
         return url
 
+class JoinedSprite(Sprite):
+    def _locate_images(self):
+        """Return all valid images within a folder.
+
+        All files with an extension not included in
+        (png, jpg, jpeg and gif) or beginning with '.' will be ignored.
+
+        If the folder doesn't contain any valid image it will raise
+        :class:`~MultipleImagesWithSameNameError`
+
+        The list of images will be ordered using the desired ordering
+        algorithm. The default is 'maxside'.
+        """
+        extensions = '|'.join(VALID_IMAGE_EXTENSIONS)
+        extension_re = re.compile('.+\.(%s)$' % extensions, re.IGNORECASE)
+        
+        
+        fileList = []
+        for root, subFolders, files in os.walk(self.path):
+            for file in files:
+                fileList.append(os.path.join(root.replace(self.path, '.'), file))
+        files=fileList
+        
+        images = [Image(n, sprite=self) for n in files if \
+                                    not (n.startswith('.') and not n.startswith('./')) and \
+                                    extension_re.match(n)]
+        
+        if not len(images):
+            raise SourceImagesNotFoundError()
+
+        # Check if there are duplicate class names
+        class_names = [i.class_name for i in images]
+        if len(set(class_names)) != len(images):
+            dup = [i for i in images if class_names.count(i.class_name) > 1]
+            raise MultipleImagesWithSameNameError(dup)
+
+        for image in images:
+            self.manager.log("\t %s => .%s" % (image.name, image.class_name))
+
+        return sorted(images, reverse=self.config.ordering[0] != '-')
+
+    @cached_property
+    def namespace(self):
+        """Return the namespace for this sprite."""
+
+        namespace = []
+        separator = self.config.separator
+
+        if self.config.namespace:
+            namespace.insert(0, self.config.namespace)
+
+        if separator == CAMELCASE_SEPARATOR:
+            namespace = [n.lower().capitalize() if i > 0 else n.lower() \
+                                            for i, n in  enumerate(namespace)]
+            separator = ''
+        return separator.join(namespace)
 
 class ConfigManager(object):
     """Manage all the available configuration.
@@ -1046,6 +1103,22 @@ class ProjectSpriteManager(BaseManager):
 
         self.save()
 
+class JoinFoldersSpriteManager(BaseManager):
+    
+    def process_sprite(self, path, name):
+        self.log("Processing '%s':" % path)
+        sprite = JoinedSprite(name=name, path=path, manager=self)
+        self.sprites.append(sprite)
+
+    def process(self):
+        self.process_sprite(path=self.path, name=self.path)
+    
+        if not len(self.sprites):
+            raise NoSpritesFoldersFoundError()
+
+        self.save()
+
+
 
 class SimpleSpriteManager(BaseManager):
 
@@ -1184,6 +1257,8 @@ def main():
                                  "| --css=<dir> --img=<dir>]"))
     parser.add_option("--project", action="store_true", dest="project",
             help="generate sprites for multiple folders")
+    parser.add_option("--join-folders", action="store_true", dest="join_folders",
+            help="generate one sprite from multiple folders")
     parser.add_option("-c", "--crop", dest="crop", action='store_true',
             help="crop images removing unnecessary transparent margins")
     parser.add_option("-l", "--less", dest="less", action='store_true',
@@ -1302,6 +1377,8 @@ def main():
 
     if options.project:
         manager_cls = ProjectSpriteManager
+    elif options.join_folders:
+        manager_cls = JoinFoldersSpriteManager
     else:
         manager_cls = SimpleSpriteManager
 
