@@ -46,7 +46,7 @@ DEFAULT_SETTINGS = {
     'optipngpath': 'optipng',
     'optipng': False,
     'project': False,
-    'join_folders': False,
+    'recursive': False,
     'quiet': False,
     'cachebuster': False,
     'cachebuster-filename': False,
@@ -886,7 +886,7 @@ class Sprite(object):
 
         return url
 
-class JoinedSprite(Sprite):
+class RecursiveSprite(Sprite):
     def _locate_images(self):
         """Return all valid images within a folder.
 
@@ -1103,10 +1103,10 @@ class ProjectSpriteManager(BaseManager):
 
         self.save()
 
-class JoinFoldersSpriteManager(BaseManager):
+class RecursiveSpriteManager(BaseManager):
     def process_sprite(self, path, name):
         self.log("Processing '%s':" % path)
-        sprite = JoinedSprite(name=os.path.basename(path), path=path, manager=self)
+        sprite = RecursiveSprite(name=os.path.basename(path), path=path, manager=self)
         self.sprites.append(sprite)
 
     def process(self):
@@ -1256,8 +1256,8 @@ def main():
                                  "| --css=<dir> --img=<dir>]"))
     parser.add_option("--project", action="store_true", dest="project",
             help="generate sprites for multiple folders")
-    parser.add_option("--join-folders", action="store_true", dest="join_folders",
-            help="generate one sprite from multiple folders")
+    parser.add_option("--recursive", action="store_true", dest="recursive",
+                help="generate one sprite from destination folder and its children")
     parser.add_option("-c", "--crop", dest="crop", action='store_true',
             help="crop images removing unnecessary transparent margins")
     parser.add_option("-l", "--less", dest="less", action='store_true',
@@ -1376,8 +1376,8 @@ def main():
 
     if options.project:
         manager_cls = ProjectSpriteManager
-    elif options.join_folders:
-        manager_cls = JoinFoldersSpriteManager
+    elif options.recursive:
+        manager_cls = RecursiveSpriteManager
     else:
         manager_cls = SimpleSpriteManager
 
