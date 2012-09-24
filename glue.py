@@ -753,14 +753,14 @@ class Sprite(object):
                                                   if ':' not in i.class_name])
         
         # add the global style for all the sprites for less bloat
-        width = '%spx' % self.canvas_size[0]
-        height = '%spx' % self.canvas_size[1]
+        width = '%spx' % round_up(self.canvas_size[0]/2)
+        height = '%spx' % round_up(self.canvas_size[1]/2)
         template = self.config.global_template.decode('unicode-escape')
         css_file.write(template % {'all_classes': class_names,
                                    'sprite_url': self.image_url(),
                                    'namespace': self.namespace,
-                                   'width': width,
-                                   'height': height})
+                                   'retina_width': width,
+                                   'retina_height': height})
 
         # compile one template for each file
         margin = int(self.config.margin)
