@@ -597,9 +597,8 @@ class Sprite(object):
         # If the retina shortcut is in use add 2.0 as a required ratio.
         if self.config.retina:
             self.ratios.add(2.0)
-
-        # Always add 1.0 as a required ratio
-        self.ratios.add(1.0)
+        else:
+            self.ratios.add(1.0)
 
         # Create a sorted list of ratios
         self.ratios = sorted(self.ratios)
