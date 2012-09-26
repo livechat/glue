@@ -751,6 +751,30 @@ class Sprite(object):
         # get all the class names and join them
         class_names = ',\n'.join(['.%s' % i.class_name for i in self.images \
                                                   if ':' not in i.class_name])
+
+
+
+        # compile one template for each file
+        margin = int(self.config.margin)
+        parsed_each = ''
+        for image in self.images:
+
+          x = '%spx' % round_up((image.x * -1 - margin * self.max_ratio) / self.max_ratio)
+          y = '%spx' % round_up((image.y * -1 - margin * self.max_ratio) / self.max_ratio)
+
+          height = '%spx' % round_up((image.height / self.max_ratio) + image.vertical_padding)
+          width = '%spx' % round_up((image.width / self.max_ratio) + image.horizontal_padding)
+
+          template = self.config.each_template.decode('unicode-escape')
+          parsed_each += template % {'class_name': '.%s' % image.class_name,
+                                     'sprite_url': self.image_url(),
+                                     'height': height,
+                                     'width': width,
+                                     'y': y,
+                                     'x': x}
+        
+        if self.ratios[0] == 1.0:
+            css_file.write(parsed_each)
         
         # add the global style for all the sprites for less bloat
         width = '%spx' % round_up(self.canvas_size[0]/2)
@@ -760,26 +784,8 @@ class Sprite(object):
                                    'sprite_url': self.image_url(),
                                    'namespace': self.namespace,
                                    'retina_width': width,
-                                   'retina_height': height})
-
-        # compile one template for each file
-        margin = int(self.config.margin)
-
-        for image in self.images:
-
-            x = '%spx' % round_up((image.x * -1 - margin * self.max_ratio) / self.max_ratio)
-            y = '%spx' % round_up((image.y * -1 - margin * self.max_ratio) / self.max_ratio)
-
-            height = '%spx' % round_up((image.height / self.max_ratio) + image.vertical_padding)
-            width = '%spx' % round_up((image.width / self.max_ratio) + image.horizontal_padding)
-
-            template = self.config.each_template.decode('unicode-escape')
-            css_file.write(template % {'class_name': '.%s' % image.class_name,
-                                       'sprite_url': self.image_url(),
-                                       'height': height,
-                                       'width': width,
-                                       'y': y,
-                                       'x': x})
+                                   'retina_height': height,
+                                   'retina_each': parsed_each})
 
         # If we have some additional ratio, we need to add one media query
         # for each one.
