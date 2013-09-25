@@ -13,7 +13,7 @@ from optparse import OptionParser, OptionGroup
 
 from PIL import Image as PImage
 
-__version__ = 'mpa-0.3.0'
+__version__ = 'lc-0.3.1'
 
 
 PADDING_REGEXP = re.compile("^(\d+-?){,3}\d+$")
@@ -490,7 +490,7 @@ class Image(object):
         option. For a camelCase representation of the CSS class name use
         ``camelcase`` as separator.
         """
-        name = self.filename[:2]+self.filename[2:].replace('/', '-')
+        name = self.filename[:2]+self.filename[2:].replace('/', '-').replace('\\', '-')
 
         # Remove padding information
         if not self.sprite.manager.config.ignore_filename_paddings:
@@ -919,7 +919,7 @@ class RecursiveSprite(Sprite):
         files=fileList
         
         images = [Image(n, sprite=self) for n in files if \
-                                    not (n.startswith('.') and not n.startswith('./')) and \
+                                    not (n.startswith('.') and (not n.startswith('./') and not n.startswith('.\\'))) and \
                                     extension_re.match(n)]
         
         if not len(images):
